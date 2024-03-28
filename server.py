@@ -27,6 +27,10 @@ def index():
     if request.method == 'POST':
         txt = request.form['text']
         mode = request.form['mode']
+        uuid_1 = request.form['uuid']
+        id_1 = request.form['id']
+        id = gen_id() if id_1 == None else id_1
+        uuid = get_uuid() if uuid_1 == None else uuid_1
         webk = True if mode == '1' else False
 
         url = 'https://www.blackbox.ai/api/chat'
@@ -34,14 +38,14 @@ def index():
         data = {
             'messages': [
                 {
-                    'id': '6cdrFCv',
+                    'id': id,
                     'content': txt,
                     'role': 'user'
                 }
             ],
             'id': '6clrFCv',
             'previewToken': None,
-            'userId': '0d264665-73ae-498f-aa3f-4b7b65997963',
+            'userId': uuid,
             'codeModelMode': True,
             'agentMode': [],
             'trendingAgentMode': [],
@@ -59,9 +63,11 @@ def index():
         response = requests.post(url, data=json.dumps(data), headers=headers)
 
         if response.status_code == 200:
-            result = response.text
+            result = response.json()
             return jsonify({
-                'status': True,
+                'id': id,
+                'uuid': uuid,
+                'web': webk,
                 'Creator': "@ExploitNeT - @ImSoheilOfficial",
                 'data': result
             })
