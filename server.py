@@ -25,10 +25,10 @@ def gen_id():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        txt = request.form['text']
-        mode = request.form['mode']
-        uuid_1 = request.form['uuid']
-        id_1 = request.form['id']
+        txt = request.form.get('text', None)
+        mode = request.form.get('mode', None)
+        uuid_1 = request.form.get('uuid', None)
+        id_1 = request.form.get('id', None)
         id = gen_id() if id_1 == None else id_1
         uuid = get_uuid() if uuid_1 == None else uuid_1
         webk = True if mode == '1' else False
