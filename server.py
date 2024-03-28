@@ -63,7 +63,7 @@ def index():
         response = requests.post(url, data=json.dumps(data), headers=headers)
 
         if response.status_code == 200:
-            result = response.json()
+            result = response.text
             return jsonify({
                 'id': id,
                 'uuid': uuid,
