@@ -3,15 +3,13 @@ import random
 import string
 from flask import Flask, render_template, request, jsonify
 import json
-import mysql.connector
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
-conn = mysql.connector.connect(host='svc-3482219c-a389-4079-b18b-d50662524e8a-shared-dml.aws-virginia-6.svc.singlestore.com', user='elyagoub', password='Elyagoubi1', port=3333, database='database_98bd8')
-c = conn.cursor()
-
-c.execute('''CREATE TABLE IF NOT EXISTS chat_data
-             (id TEXT, uuid TEXT, web_mode INTEGER, result TEXT)''')
+client = MongoClient('mongodb://testai_fartiredso:cd7e4c051ff05bb1216d9cb6372e1d5e2e5974ec@rxe.h.filess.io:27018/testai_fartiredso')
+db = client['testai_fartiredso']
+collection = db['chat']
 
 def get_uuid():
     response = requests.get("https://www.uuidgenerator.net/api/version4")
@@ -21,11 +19,12 @@ def get_uuid():
         return None
 
 def gen_id():
-    alphabet = string.ascii_lowercase
-    digits = string.digits
+    id_format = ''.join(random.choices(string.ascii_uppercase, k=2)) + \
+                ''.join(random.choices(string.ascii_lowercase, k=2)) + \
+                random.choice(string.ascii_uppercase) + \
+                ''.join(random.choices(string.ascii_lowercase, k=2)) + \
+                random.choice(string.digits)
 
-    id_format = random.choices(string.ascii_uppercase, k=2) + random.choices(string.ascii_lowercase, k=2) + random.choice(string.ascii_uppercase) + random.choices(string.ascii_lowercase, k=2) + random.choice(string.digits)
-    
     custom_id = ''.join(random.sample(id_format, len(id_format)))
     return custom_id
 
@@ -36,8 +35,8 @@ def index():
         mode = request.form.get('mode')
         uuid_1 = request.form.get('uuid')
         id_1 = request.form.get('id')
-        id = gen_id() if id_1 == None else id_1
-        uuid = get_uuid() if uuid_1 == None else uuid_1
+        id = gen_id() if id_1 is None else id_1
+        uuid = get_uuid() if uuid_1 is None else uuid_1
         webk = True if mode == '1' else False
 
         url = 'https://www.blackbox.ai/api/chat'
@@ -72,9 +71,8 @@ def index():
         if response.status_code == 200:
             result = response.text
             
-            # Store data in SQLite database
-            c.execute("INSERT INTO chat_data (id, uuid, web_mode, result) VALUES (?, ?, ?, ?)", (id, uuid, int(webk), result))
-            conn.commit()
+            # Store data in MongoDB
+            collection.insert_one({'id': id, 'uuid': uuid, 'web_mode': int(webk), 'result': result})
 
             return jsonify({
                 'id': id,
