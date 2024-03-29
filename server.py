@@ -7,7 +7,7 @@ import boto3
 
 app = Flask(__name__)
 
-dynamodb = boto3.resource('dynamodb', region_name='eu-west-1', aws_access_key_id='your_access_keyASIA4N2NY7ZRD5EZA6FA', aws_secret_access_key='Vf95aLRU4wWSJ888vGuYthDCMRBMPIDTjH4TDUEL')
+dynamodb = boto3.resource('dynamodb', region_name='eu-west-1', aws_access_key_id='ASIA4N2NY7ZRD5EZA6FA', aws_secret_access_key='Vf95aLRU4wWSJ888vGuYthDCMRBMPIDTjH4TDUEL')
 table = dynamodb.Table('fantastic-bear-veilCyclicDB')
 
 def get_uuid():
