@@ -3,12 +3,15 @@ import random
 import string
 from flask import Flask, render_template, request, jsonify
 import json
-import boto3
+import mysql.connector
 
 app = Flask(__name__)
 
-dynamodb = boto3.resource('dynamodb', region_name='eu-west-1', aws_access_key_id='ASIA4N2NY7ZRD5EZA6FA', aws_secret_access_key='Vf95aLRU4wWSJ888vGuYthDCMRBMPIDTjH4TDUEL')
-table = dynamodb.Table('fantastic-bear-veilCyclicDB')
+conn = mysql.connector.connect(host='svc-3482219c-a389-4079-b18b-d50662524e8a-shared-dml.aws-virginia-6.svc.singlestore.com', user='elyagoub', password='Elyagoubi1', port=3333, database='database_98bd8')
+c = conn.cursor()
+
+c.execute('''CREATE TABLE IF NOT EXISTS chat_data
+             (id TEXT, uuid TEXT, web_mode INTEGER, result TEXT)''')
 
 def get_uuid():
     response = requests.get("https://www.uuidgenerator.net/api/version4")
@@ -29,10 +32,10 @@ def gen_id():
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        txt = request.form['text']
-        mode = request.form['mode']
-        uuid_1 = request.form['uuid']
-        id_1 = request.form['id']
+        txt = request.form.get('text')
+        mode = request.form.get('mode')
+        uuid_1 = request.form.get('uuid')
+        id_1 = request.form.get('id')
         id = gen_id() if id_1 == None else id_1
         uuid = get_uuid() if uuid_1 == None else uuid_1
         webk = True if mode == '1' else False
@@ -47,7 +50,7 @@ def index():
                     'role': 'user'
                 }
             ],
-            'id': '6clrFCv',
+            'id': id,
             'previewToken': None,
             'userId': uuid,
             'codeModelMode': True,
@@ -69,15 +72,9 @@ def index():
         if response.status_code == 200:
             result = response.text
             
-            # Store data in DynamoDB table
-            response_dynamodb = table.put_item(
-                Item={
-                    'id': id,
-                    'uuid': uuid,
-                    'web_mode': int(webk),
-                    'result': result
-                }
-            )
+            # Store data in SQLite database
+            c.execute("INSERT INTO chat_data (id, uuid, web_mode, result) VALUES (?, ?, ?, ?)", (id, uuid, int(webk), result))
+            conn.commit()
 
             return jsonify({
                 'id': id,
